@@ -1,0 +1,88 @@
+
+CREATE TABLE User (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    address VARCHAR(255),
+    phone VARCHAR(20),
+    level VARCHAR(20),
+    avatar_url VARCHAR(255),
+    self_description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE UserAuth (
+    user_id INT PRIMARY KEY,
+    password VARCHAR(255) NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Book (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    author VARCHAR(100) NOT NULL,
+    isbn VARCHAR(20) UNIQUE,
+    price DECIMAL(10, 2) NOT NULL,
+    cover_url VARCHAR(255),
+    sales INT DEFAULT 0,
+    stock INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE Cart (
+    user_id INT PRIMARY KEY,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE CartItem (
+    cart_id INT NOT NULL,
+    book_id INT NOT NULL,
+    quantity INT NOT NULL,
+    PRIMARY KEY (cart_id, book_id),
+    FOREIGN KEY (cart_id) REFERENCES Cart(user_id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+CREATE TABLE `Order` (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    total_price DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES User(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE OrderItem (
+    order_id INT NOT NULL,
+    book_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    PRIMARY KEY (order_id, book_id),
+    FOREIGN KEY (order_id) REFERENCES `Order`(id) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (book_id) REFERENCES Book(id) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+User 和 UserAuth 之间的一对一关系：
+UserAuth 表中的 user_id 是 User 表中的 id 的外键。
+删除一个用户时，相关的认证信息也会被删除（ON DELETE CASCADE）。
+User 和 Cart 之间的一对一关系：
+每个用户只有一个购物车，Cart 表中的 user_id 是 User 表中的 id 的外键。
+删除一个用户时，相关的购物车记录也会被删除（ON DELETE CASCADE）。
+Cart 和 CartItem 之间的一对多关系：
+一个购物车可以包含多个商品。
+删除一个购物车时，相关的购物车项也会被删除（ON DELETE CASCADE）。
+User 和 Order 之间的一对多关系：
+一个用户可以有多个订单。
+删除一个用户时，相关的订单记录也会被删除（ON DELETE CASCADE）。
+Order 和 OrderItem 之间的一对多关系：
+一个订单可以包含多个商品。
+删除一个订单时，相关的订单项也会被删除（ON DELETE CASCADE）。
+CartItem 和 Book 之间的多对一关系：
+一个购物车项对应一个书籍。
+删除书籍时，如果书籍在购物车中，不能删除（ON DELETE RESTRICT），确保数据一致性。
+OrderItem 和 Book 之间的多对一关系：
+一个订单项对应一个书籍。
+删除书籍时，如果书籍在订单中，不能删除（ON DELETE RESTRICT），确保数据一致性。
